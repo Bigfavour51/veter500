@@ -24,6 +24,7 @@ Operational WorkFlow:
  float powerFactor {};
  int slaveValues [NUM_THRESHOLDS] ;// Array to hold slave values
  int  PowerThreshold, DistanceThreshold, TempThreshold;
+ String whitelist[] = {"PACK1234", "PACKABCD"}; // station-side allowed IDs
 
 // === Create Software Serial Port for PZEM ===
 SoftwareSerial pzemSerial(PZEM_RX_PIN, PZEM_TX_PIN); // RX, TX
@@ -41,30 +42,49 @@ void VERTER_init()
     pinMode(VERTER_buzzer_pin, OUTPUT);
     pinMode(VERTER_powerControl_pin, OUTPUT);
     digitalWrite(VERTER_buzzer_pin, LOW); // Ensure buzzer is off initially
-    digitalWrite(VERTER_powerControl_pin, LOW); // Ensure power control is off initially
+    digitalWrite(VERTER_powerControl_pin, HIGH); // Ensure power control is off initially
 }
 
-void VERTER_AuthenticateBattery() 
+String VERTER_AuthenticateBattery() 
 {
-    // Authenticate battery by reading its EEPROM
-    Wire.beginTransmission(VERTER_batteryI2C_address);
-    Wire.write(0x00); // Start reading from address 0
+   char buf[VERTER_ID_LEN+1];
+  for (unsigned int i=0; i<VERTER_ID_LEN; ++i) {
+    uint8_t devAddr = VERTER_batteryI2C_address | (((VERTER_ID_ADDR + i) >> 8) & 0x07);
+    uint8_t lowAddr = (VERTER_ID_ADDR + i) & 0xFF;
+    Wire.beginTransmission(devAddr);
+    Wire.write(lowAddr);
     Wire.endTransmission();
-    
-    Wire.requestFrom(VERTER_batteryI2C_address, 1);
-    if (Wire.available()) {
-        uint8_t authByte = Wire.read();
-        if (authByte == 0x01) { // Assuming 0x01 is the authentication byte
-            Serial.println("Battery authenticated successfully.");
-        } else {
-            Serial.println("Battery authentication failed.");
-            digitalWrite(VERTER_buzzer_pin, HIGH); // Sound alarm
-            delay(3000); // Wait for 3 seconds
-            digitalWrite(VERTER_buzzer_pin, LOW); // Turn off buzzer
-            digitalWrite(VERTER_powerControl_pin, LOW); // Ensure power control is off
-            return; // Exit if authentication fails
-        }
+    Wire.requestFrom(devAddr, (uint8_t)1);
+    if (Wire.available()) buf[i] = (char)Wire.read();
+    else buf[i] = 0;
+  }
+  buf[VERTER_ID_LEN] = 0;
+  return String(buf);
+}
+
+bool VERTER_checkWhitelist(String id) {
+  for (auto &w : whitelist) if (w == id) return true;
+  return false;
+}
+
+void VERTER_PowerInverterON()
+{
+    digitalWrite(VERTER_powerControl_pin, HIGH); // Close relay to supply power
+    digitalWrite(VERTER_buzzer_pin, LOW); // Ensure buzzer is On
+    delay(1000);
+    digitalWrite(VERTER_buzzer_pin, HIGH); // Ensure buzzer is Off
+}
+
+void VERTER_PowerInverterOFF()
+{
+    digitalWrite(VERTER_powerControl_pin, LOW); // Open relay to cut off power
+    for (int i = 0; i < 3; i++) {
+        digitalWrite(VERTER_buzzer_pin, LOW); // Sound buzzer
+        delay(200);
+        digitalWrite(VERTER_buzzer_pin, HIGH); // Turn off buzzer
+        delay(200);
     }
+    digitalWrite(VERTER_buzzer_pin, HIGH); // Ensure buzzer is Off
 }
 
 void VERTER_CalculateBatteryPercentage() 

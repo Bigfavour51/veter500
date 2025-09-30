@@ -61,18 +61,25 @@ Scope of Work:
 #define VERTER_powerControl_pin 4
 
 #define VERTER_batteryI2C_address 0x50 // I2C address for the battery EEPROM
+#define EEPROM_BASE 0x50
+#define VERTER_ID_ADDR 0
+#define VERTER_ID_LEN 8
+
+#define VERTER_RELAY_PIN 7
 
 
 // === Function Declarations ===
 void VERTER_init();
-void VERTER_AuthenticateBattery();
+String VERTER_AuthenticateBattery();
 void VERTER_ReadEnergyValues();
 void VERTER_CalculateBatteryPercentage();
 void VERTER_SetChargingState();
 void VERTER_updateEnergyReadings();
 void VERTER_uart_master_send();
 void VERTER_authBATTERY();
-
+bool VERTER_checkWhitelist(String id);
+void VERTER_PowerInverterON();
+void VERTER_PowerInverterOFF();
 
 // === Global Variables declaration===
 extern float batteryPercentage;
@@ -87,7 +94,7 @@ extern float powerFactor;
 extern int   slaveValues [NUM_THRESHOLDS] ;// Array to hold slave values
 extern int   PowerThreshold, DistanceThreshold, TempThreshold;
 
-
+extern String whitelist[]; // station-side allowed IDs
 
 
 #endif // __VERTERLIB_H__
