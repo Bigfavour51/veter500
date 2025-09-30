@@ -46,8 +46,8 @@ Scope of Work:
 
 
 // === User Configuration ===
-#define PZEM_RX_PIN 8   // Connect to TX of NANO
-#define PZEM_TX_PIN 7   // Connect to RX of NANO
+#define PZEM_RX_PIN 7   // Connect to TX of NANO
+#define PZEM_TX_PIN 8   // Connect to RX of NANO
 
 // === Constants ===
 #define NUM_THRESHOLDS 3
