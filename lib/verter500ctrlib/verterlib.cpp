@@ -43,6 +43,19 @@ void VERTER_init()
     pinMode(VERTER_powerControl_pin, OUTPUT);
     digitalWrite(VERTER_buzzer_pin, LOW); // Ensure buzzer is off initially
     digitalWrite(VERTER_powerControl_pin, HIGH); // Ensure power control is off initially
+
+
+     // Authenticate battery and check whitelist
+          String batteryID = VERTER_AuthenticateBattery();
+          if (VERTER_checkWhitelist(batteryID)) {
+              VERTER_PowerInverterON();
+          } else {
+              VERTER_PowerInverterOFF();
+              // Optionally, you can add a delay or halt further processing
+              // to prevent repeated attempts to power on with an invalid battery
+              delay(3000); // Wait before next authentication attempt
+              return; // Skip the rest of the loop
+          }
 }
 
 String VERTER_AuthenticateBattery() 
@@ -69,27 +82,29 @@ bool VERTER_checkWhitelist(String id) {
 
 void VERTER_PowerInverterON()
 {
-    digitalWrite(VERTER_powerControl_pin, HIGH); // Close relay to supply power
-    digitalWrite(VERTER_buzzer_pin, LOW); // Ensure buzzer is On
+    digitalWrite(VERTER_powerControl_pin, LOW); // Close relay to supply power
+
+    digitalWrite(VERTER_buzzer_pin, 1); // Ensure buzzer is On
     delay(1000);
-    digitalWrite(VERTER_buzzer_pin, HIGH); // Ensure buzzer is Off
+    digitalWrite(VERTER_buzzer_pin, 0); // Ensure buzzer is Off
 }
 
 void VERTER_PowerInverterOFF()
 {
-    digitalWrite(VERTER_powerControl_pin, LOW); // Open relay to cut off power
+    digitalWrite(VERTER_powerControl_pin, HIGH); // Open relay to cut off power
     for (int i = 0; i < 3; i++) {
-        digitalWrite(VERTER_buzzer_pin, LOW); // Sound buzzer
+        digitalWrite(VERTER_buzzer_pin, HIGH); // Sound buzzer
         delay(200);
-        digitalWrite(VERTER_buzzer_pin, HIGH); // Turn off buzzer
+        digitalWrite(VERTER_buzzer_pin, LOW); // Turn off buzzer
         delay(200);
     }
-    digitalWrite(VERTER_buzzer_pin, HIGH); // Ensure buzzer is Off
+    digitalWrite(VERTER_buzzer_pin, LOW); // Ensure buzzer is Off
 }
+
 
 void VERTER_CalculateBatteryPercentage() 
 {
-    const float ADC_REF = 5.0;        // Nano default
+    const float ADC_REF = 5.5;        // Nano default
     const float ADC_MAX = 1023.0;
     const float SCALE   = 6.087f;     // = Vbat_measured / Vadc_measured = 12.6 / 2.070
 
@@ -101,7 +116,8 @@ void VERTER_CalculateBatteryPercentage()
     float pct = ((Vbat - 9.0f) / (12.6f - 9.0f)) * 100.0f;
     if (pct < 0) pct = 0;
     if (pct > 100) pct = 100;
-    batteryPercentage = pct;
+     batteryPercentage = pct;   // aina actual battery percentage
+  //  batteryPercentage = 20; //dummy battery percentage test value
 }
 
 void VERTER_SetChargingState() 

@@ -57,15 +57,15 @@ Scope of Work:
 
 #define VERTER_chargeState_pin A1
 #define VERTER_batteryVoltage_pin A0
-#define VERTER_buzzer_pin 3
-#define VERTER_powerControl_pin 4
+#define VERTER_buzzer_pin 5
+#define VERTER_powerControl_pin 6
 
 #define VERTER_batteryI2C_address 0x50 // I2C address for the battery EEPROM
 #define EEPROM_BASE 0x50
 #define VERTER_ID_ADDR 0
 #define VERTER_ID_LEN 8
 
-#define VERTER_RELAY_PIN 7
+
 
 
 // === Function Declarations ===

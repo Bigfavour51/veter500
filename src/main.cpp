@@ -8,7 +8,8 @@
     }
 
     void loop() {
-        if (VERTER_AuthenticateBattery()) { VERTER_PowerInverterON(); } else { VERTER_PowerInverterOFF(); }
+
+         
         VERTER_updateEnergyReadings();
         VERTER_CalculateBatteryPercentage();
         VERTER_SetChargingState();
@@ -16,3 +17,5 @@
         delay(100); // Delay for a second before the next loop
 
     }
+
+ 
