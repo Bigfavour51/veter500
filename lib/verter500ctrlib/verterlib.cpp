@@ -1,4 +1,13 @@
 /*
+        FILE NAME : verterlib.cpp
+        FILE DESCRIPTION : Definition file for Verter500C Portable Power Station Controller library.
+        FILE AUTHOR : Aina Favour Olalekan.
+        DATE CREATED : 2024-10-01.
+        DATE LAST MODIFIED : 2024-10-10.
+*/
+
+
+/*
 Operational WorkFlow:
 1. When battery is connected, authenticate the battery pack by reading the EEPROM.
 2. If authentication is successful, trigger VERTER_powerControl_pin to close relay and supply battery power.

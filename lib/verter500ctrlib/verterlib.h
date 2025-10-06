@@ -1,7 +1,10 @@
-#ifndef __VERTERLIB_H__
-#define __VERTERLIB_H__
-
-
+/*
+        FILE NAME : verterlib.h
+        FILE DESCRIPTION : Declaration file for Verter500C Portable Power Station ontroller library.
+        FILE AUTHOR : Aina Favour Olalekan.
+        DATE CREATED : 2024-10-01.
+        DATE LAST MODIFIED : 2024-10-10.
+*/
 
 /*
 Firmware design for Verter500C Energy Meter Controller
@@ -14,27 +17,16 @@ Scope of Work:
 - Implement a Battery percent calculation using voltage divider method
 - Implement charging and not charging stated using diode resistor method
 
-
 */
 
+#ifndef __VERTERLIB_H__
+#define __VERTERLIB_H__
 
 
 
-/*
-               PIN CONNECTION MAPPING
-               ------------------------
-    screen UART TX  -> Verter500C RX- D0
-    screen UART RX  -> Verter500C TX- D1
-    PZEM RX         -> Verter500C TX- D7
-    PZEM TX         -> Verter500C RX- D8
-    Battery EEPROM  -> Verter500C I2C pins (SDA-A4, SCL-A5)
-    Battery Voltage -> Verter500C VERTER_batteryVoltage_pin - A0
-    Battery Charge State -> Verter500C VERTER_chargeState_pin - D2
-    Buzzer          -> Verter500C VERTER_buzzer_pin - D3
-    Power Control   -> Verter500C VERTER_powerControl_pin - D4
 
 
-*/
+
 
 
 
