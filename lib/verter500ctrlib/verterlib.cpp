@@ -31,6 +31,7 @@ Operational WorkFlow:
  float energy {};
  float frequency {};
  float powerFactor {};
+ float lastBatteryPct = 0.0f;
  int slaveValues [NUM_THRESHOLDS] ;// Array to hold slave values
  int  PowerThreshold, DistanceThreshold, TempThreshold;
  String whitelist[] = {"PACK1234", "PACKABCD"}; // station-side allowed IDs
@@ -57,9 +58,9 @@ void VERTER_init()
      // Authenticate battery and check whitelist
           String batteryID = VERTER_AuthenticateBattery();
           if (VERTER_checkWhitelist(batteryID)) {
-              VERTER_PowerInverterON();
-          } else {
               VERTER_PowerInverterOFF();
+          } else {
+              VERTER_PowerInverterON();
               // Optionally, you can add a delay or halt further processing
               // to prevent repeated attempts to power on with an invalid battery
               delay(3000); // Wait before next authentication attempt
@@ -70,7 +71,7 @@ void VERTER_init()
 String VERTER_AuthenticateBattery() 
 {
    char buf[VERTER_ID_LEN+1];
-  for (unsigned int i=0; i<VERTER_ID_LEN; ++i) {
+   for (unsigned int i=0; i<VERTER_ID_LEN; ++i) {
     uint8_t devAddr = VERTER_batteryI2C_address | (((VERTER_ID_ADDR + i) >> 8) & 0x07);
     uint8_t lowAddr = (VERTER_ID_ADDR + i) & 0xFF;
     Wire.beginTransmission(devAddr);
@@ -110,25 +111,42 @@ void VERTER_PowerInverterOFF()
     digitalWrite(VERTER_buzzer_pin, LOW); // Ensure buzzer is Off
 }
 
-
 void VERTER_CalculateBatteryPercentage() 
 {
-    const float ADC_REF = 5.5;        // Nano default
+   
+    const float ADC_REF = 5.;       // use your *actual measured* 5V rail if possible
     const float ADC_MAX = 1023.0;
-    const float SCALE   = 6.087f;     // = Vbat_measured / Vadc_measured = 12.6 / 2.070
+    const float SCALE   = 6.087f;    // divider scaling
+    const int sampleCount = 20;
 
-    float raw = analogRead(VERTER_batteryVoltage_pin);
-    float Vadc = (raw / ADC_MAX) * ADC_REF;  // volts at ADC pin
-    float Vbat = Vadc * SCALE;               // calibrated pack voltage
-    batteryVoltage = (Vbat-0.6);
+    // === Averaging for noise reduction ===
+    float sum = 0.0f;
+    for (int i = 0; i < sampleCount; i++) {
+        sum += analogRead(VERTER_batteryVoltage_pin);
+        delay(5);
+    }
 
+    float avg = sum / sampleCount;
+    float Vadc = (avg / ADC_MAX) * ADC_REF;
+    float Vbat = Vadc * SCALE;
+    batteryVoltage = (Vbat - 0.6f);  // your calibration offset
+
+    // === Battery percentage calculation ===
     float pct = ((Vbat - 9.0f) / (12.6f - 9.0f)) * 100.0f;
-    if (pct < 0) pct = 0;
-    if (pct > 100) pct = 100;
-     batteryPercentage = pct;   // aina actual battery percentage
-  //  batteryPercentage = 20; //dummy battery percentage test value
-}
+    pct = constrain(pct, 0.0f, 100.0f);
 
+    // === Apply exponential smoothing ===
+    // makes changes more gradual
+    const float alpha = 0.1f; // smaller = smoother
+    batteryPercentage = (alpha * pct) + ((1 - alpha) * lastBatteryPct);
+
+    // === Hysteresis filter (optional) ===
+    if (fabs(batteryPercentage - lastBatteryPct) >= 0.5f) {
+        lastBatteryPct = batteryPercentage;
+    } else {
+        batteryPercentage = lastBatteryPct;
+    }
+}
 void VERTER_SetChargingState() 
 {
       int raw = analogRead(VERTER_chargeState_pin);

@@ -86,6 +86,8 @@ extern float powerFactor;
 extern int   slaveValues [NUM_THRESHOLDS] ;// Array to hold slave values
 extern int   PowerThreshold, DistanceThreshold, TempThreshold;
 
+extern float lastBatteryPct;
+
 extern String whitelist[]; // station-side allowed IDs
 
 
